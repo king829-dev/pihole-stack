@@ -1,0 +1,24 @@
+name: pihole
+
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      # Web UI on 8081 so port 80 stays free for anything else on the host.
+      - "8081:80/tcp"
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - FTLCONF_webserver_api_password=${PIHOLE_PASSWORD}
+      # Upstream resolvers Pi-hole forwards to (Cloudflare here; swap for
+      # Quad9 9.9.9.9;149.112.112.112 or your own unbound if you prefer).
+      - FTLCONF_dns_upstreams=1.1.1.1;1.0.0.1
+      # Answer queries from any interface, not just the local subnet. Fine on
+      # a home LAN behind NAT; tighten to "local" if the host is ever exposed.
+      - FTLCONF_dns_listeningMode=all
+    volumes:
+      # All Pi-hole state (gravity db, settings, query log). Back this up.
+      - ${PIHOLE_CONFIG_DIR:-./etc-pihole}:/etc/pihole
+    restart: unless-stopped
